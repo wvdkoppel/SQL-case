@@ -1,0 +1,63 @@
+CREATE TABLE teams (
+    team_id int NOT NULL,
+    team_name varchar(60) NOT NULL,
+    UNIQUE(team_id)
+);
+
+INSERT INTO teams
+VALUES
+    (10, 'Give'),
+    (20, 'Never'),
+    (30, 'You'),
+    (40, 'Up'),
+    (50, 'Gonna');
+
+SELECT * FROM teams;
+
+CREATE TABLE matches (
+  match_id int NOT NULL,
+  host_team int NOT NULL,
+  guest_team int NOT NULL,
+  host_goals int NOT NULL,
+  guest_goals int NOT NULL,
+  UNIQUE(match_id)
+);
+
+INSERT INTO matches
+VALUES
+    (1, 30, 20, 1, 0),
+    (2, 10, 20, 1, 2),
+    (3, 20, 50, 2, 2),
+    (4, 10, 30, 1, 0),
+    (5, 30, 50, 0, 1);
+
+SELECT * FROM matches;
+
+-- solution
+
+SELECT team_id, team_name, SUM(COALESCE(points,0)) AS num_points
+FROM teams
+LEFT JOIN
+		(SELECT
+			   match_id,
+			   host_team AS team,
+			   CASE
+				   WHEN host_goals > guest_goals THEN 3
+				   WHEN host_goals < guest_goals THEN 0
+				   ELSE 1
+			   END
+			   AS points
+		FROM matches
+		UNION
+		SELECT
+			   match_id,
+			   guest_team AS team,
+			   CASE
+				   WHEN guest_goals > host_goals THEN 3
+				   WHEN guest_goals < host_goals THEN 0
+				   ELSE 1
+			   END
+			   AS points
+		FROM matches) AS foo on teams.team_id = foo.team
+GROUP BY team_id, team_name
+ORDER BY num_points DESC, team_id ASC
